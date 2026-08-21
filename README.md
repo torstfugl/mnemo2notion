@@ -1,44 +1,42 @@
 # Notion ↔ Mnemo Converter
 
-Move your notes between [Notion](https://www.notion.com) and [Mnemo](https://github.com/onemnemo/mnemo) —
-**both ways, formatting included**: equations, text and background colours, headings, callouts,
-tables, columns, images, sub-pages, tags and page icons.
+Moves notes between [Notion](https://www.notion.com) and [Mnemo](https://github.com/onemnemo/mnemo)
+in both directions, keeping formatting: equations, text and background colours, headings,
+callouts, tables, columns, images, sub-pages, tags and page icons.
 
-- **Notion → Mnemo** produces a `.mnemo` package you import through Mnemo's own
-  **Notes → Import** panel.
-- **Mnemo → Notion** creates real pages in your Notion workspace through Notion's API —
-  images uploaded, colours mapped, structure intact. Your notes are never locked in.
+Notion → Mnemo writes a `.mnemo` package that you import from Mnemo's Notes → Import panel.
+Mnemo → Notion goes the other way, creating real pages through Notion's API and uploading
+the images as it goes.
 
-Everything runs on your machine. Notes travel directly between you and Notion; there is no
-server in the middle, no account, and no telemetry — the same deal Mnemo itself offers.
+Everything runs locally. The only traffic is between your machine and Notion's API, and
+there is no account or telemetry.
 
 ## The app
-
-The desktop app walks you through it: paste an integration token, pick the pages you want
-from a list, choose your options, convert.
 
 ```
 pip install -r requirements-gui.txt
 python -m notion2mnemo gui
 ```
 
-Or grab the prebuilt Windows executable from the releases page — no Python needed.
+The app asks which direction you want, takes your integration key, and lists the pages it
+can see so you can pick from them. There are prebuilt Windows executables on the releases
+page if you would rather not install Python.
 
-**Setup (once, ~2 minutes):**
+Setup takes about two minutes and only has to be done once:
 
 1. Create an integration at [notion.so/my-integrations](https://www.notion.so/my-integrations)
    and copy its secret.
-2. In Notion, open each top-level page you want to move and choose
-   **⋯ → Connections →** your integration. Sub-pages are included automatically.
+2. In Notion, open each top-level page you want to move and choose ⋯ → Connections → your
+   integration. Sub-pages are included automatically.
 3. Paste the secret into the app.
 
-For the **Mnemo → Notion** direction the integration also needs *insert content* capability
-(on by default for new integrations), and must be connected to the page you want the imported
-pages created under.
+Going Mnemo → Notion also needs the integration to have insert content capability, which is
+on by default for new integrations, and it must be connected to whichever page you want the
+imported pages created under.
 
 ## The CLI
 
-Everything the app does is also scriptable. See `python -m notion2mnemo --help` for all flags.
+The CLI does everything the app does. `python -m notion2mnemo --help` lists the flags.
 
 ```bash
 pip install -r requirements.txt
@@ -55,8 +53,8 @@ python -m notion2mnemo --database 1234abcd... --db-properties none
 python -m notion2mnemo push notes.mnemo --parent https://www.notion.so/Imports-...
 ```
 
-The pull direction caches API responses in `.notion-cache/`, so a re-run after tweaking
-options costs no API calls, and Ctrl-C is always safe to resume from.
+The pull direction caches API responses in `.notion-cache/`, so re-running after changing an
+option costs no API calls. Ctrl-C is safe to resume from.
 
 ## What carries over
 
@@ -70,31 +68,31 @@ options costs no API calls, and Ctrl-C is always safe to resume from.
 | Quote, divider | `Quote`, `Divider` | |
 | Callout | `Callout` | Emoji kept; red/orange/yellow → `warn` tone |
 | Code | `Code` | Language and caption kept |
-| Equation block / inline equation | `Equation` / `EquationSpan` | LaTeX verbatim — both apps render KaTeX |
+| Equation block / inline equation | `Equation` / `EquationSpan` | LaTeX verbatim; both apps render KaTeX |
 | Image | `Image` + bundled asset | Downloaded into the package; caption kept |
-| Table | `Table` tree | Header row *and* header column |
+| Table | `Table` tree | Header row and header column |
 | Columns | `TwoColumn` | Widths kept; 3+ columns nest (see below) |
 | Sub-page | Sub-note + `Page` block | Keeps nesting and position |
 | Synced block | Inlined | |
-| Toggle | Text + children | Contents survive; the fold doesn't |
+| Toggle | Text + children | Contents survive, the fold does not |
 | Database | Folder of notes | Labels → tags; other properties → a table atop each note |
 | Page icon / cover | Note emoji / cover | Covers with `--covers` |
 | Bookmark, embed, video, file | Text with a link | Never silently dropped |
 
-Bold, italic, underline, strikethrough, inline code, links, text colour and background
-colour carry on every one of these.
+Bold, italic, underline, strikethrough, inline code, links, text colour and background colour
+carry on all of these.
 
 ### Mnemo → Notion
 
 | Mnemo | Notion | Notes |
 | --- | --- | --- |
-| Text, headings, lists, quote, divider | The same | `Heading4` becomes `heading_3` (Notion has three) |
+| Text, headings, lists, quote, divider | The same | `Heading4` becomes `heading_3`, since Notion has three |
 | Checklist | To-do | State kept |
 | Code | Code | Language mapped back; caption kept |
 | Equation / equation span | Equation block / inline equation | Notion caps expressions at 1000 chars; longer ones become code with a warning |
-| Image | Image | **Uploaded** via Notion's File Upload API, caption kept |
+| Image | Image | Uploaded via Notion's File Upload API, caption kept |
 | Callout | Callout | Emoji and tone-derived colour |
-| Table | Table | First-row/first-column headers (all Notion supports) |
+| Table | Table | First-row/first-column headers, which is all Notion supports |
 | TwoColumn | Column list | Split ratio preserved via `width_ratio` |
 | Sub-note (`Page` block) | Real child page, at its position | |
 | Folder | A page holding its notes | Notion has no folders |
@@ -102,45 +100,49 @@ colour carry on every one of these.
 
 ### Colours
 
-Mnemo stores colours as theme tokens; Notion has a fixed nine-colour palette. The mapping
-(both directions) matches on hue and is chosen so a round trip **converges** — a note that
-goes Notion → Mnemo → Notion keeps its colour instead of drifting. Three Notion pairs
-collapse on the way in because Mnemo's palette has no brown (details in
-[`notion2mnemo/colors.py`](notion2mnemo/colors.py)); the CLI accepts `--color-map FILE` to
-override any of it. One Notion rule applies on the way out: a run holds *either* a text
-colour or a background, so a span carrying both keeps the background.
+Mnemo stores colours as theme tokens and Notion has a fixed nine-colour palette. The mapping
+runs both ways, matches on hue, and is chosen so that a round trip converges: a note that goes
+Notion → Mnemo → Notion keeps its colour instead of drifting. Three Notion pairs collapse on
+the way in because Mnemo's palette has no brown, which
+[`notion2mnemo/colors.py`](notion2mnemo/colors.py) explains in more detail. `--color-map FILE`
+overrides any of it.
+
+One Notion rule applies on the way out. A run holds either a text colour or a background, not
+both, so a span carrying both keeps the background.
 
 ### Known losses
 
-- **Toggle collapse state** (contents survive as nested blocks).
-- **Notion-hosted file attachments** (PDF, video, uploaded files) — their URLs expire within
-  the hour, so they become links plus a warning naming each one. Images are fine: they are
-  downloaded during conversion.
-- **Database views, filters, formulas-as-formulas, relations** — rows and computed values
-  survive; the machinery doesn't.
-- Buttons, AI blocks, and anything Notion's API itself reports as unsupported.
+Toggle collapse state, though the contents survive as nested blocks.
 
-Nothing is dropped silently: every skipped item is counted in the summary or named in the
-warnings, which the app shows and the CLI writes next to the output file.
+Notion-hosted file attachments (PDF, video, uploaded files). Their URLs expire within the hour,
+so they become links, and each one is named in the warnings. Images are fine because they get
+downloaded during conversion.
+
+Database views, filters, formulas-as-formulas and relations. Rows and computed values survive
+but the machinery does not.
+
+Buttons, AI blocks, and anything Notion's API itself reports as unsupported.
+
+Skipped items are always accounted for, either counted in the summary or named in the warnings.
+The app shows these and the CLI writes them next to the output file.
 
 ## Re-running
 
-Ids are derived deterministically from Notion ids, so converting twice produces the same
-note ids — re-import into Mnemo with the **Overwrite** conflict policy to update in place
-instead of duplicating. Unchanged content produces a byte-identical package.
+Ids are derived from Notion ids, so converting twice produces the same note ids. Re-import into
+Mnemo with the Overwrite conflict policy to update in place rather than duplicating. Unchanged
+content produces a byte-identical package.
 
 ## Building from source
 
 ```bash
 pip install -r requirements-dev.txt
-python -m unittest discover -s tests -t .     # 132 tests, no network, no token
+python -m unittest discover -s tests -t .     # 132 tests, no network or token needed
 python -m notion2mnemo gui                    # run the app from source
 pyinstaller notion2mnemo.spec                 # build the Windows executable
 ```
 
-The test suite pins the emitted JSON against what Mnemo's `BlockJsonConverter` actually
-reads, so a format change in either app fails a test here rather than silently corrupting
-an import.
+The tests pin the emitted JSON against what Mnemo's `BlockJsonConverter` actually reads, so a
+format change on either side breaks a test here instead of quietly corrupting an import.
 
 ### Project layout
 
@@ -161,17 +163,17 @@ an import.
 
 ## Troubleshooting
 
-**"The integration can't see any pages."** In Notion: open the page →
-⋯ → Connections → add your integration. This is per top-level page.
+**The integration can't see any pages.** In Notion, open the page and use ⋯ → Connections to
+add your integration. This is per top-level page.
 
-**Import fails in Mnemo with older versions.** Table support in packages needs a
-Mnemo build from mid-2026 or later; update Mnemo.
+**Import fails in Mnemo with older versions.** Table support in packages needs a Mnemo build
+from mid-2026 or later, so update Mnemo.
 
 **A database is missing (CLI).** If it has multiple data sources, pass
 `--notion-version 2025-09-03`.
 
-**Mnemo → Notion says 404.** The parent page isn't connected to the integration —
-Connections again, on that page.
+**Mnemo → Notion says 404.** The parent page isn't connected to the integration. Connections
+again, on that page.
 
 ## License
 

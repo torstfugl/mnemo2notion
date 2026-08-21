@@ -4,86 +4,90 @@
  * rail, a single working area that swaps screens, and an action bar that always
  * holds the next move in the same place. Nothing scrolls except the lists.
  *
- * Colour is spent, not spread. Neutrals carry the whole interface; the violet
- * accent marks exactly three things - where you are, what is chosen, and what a
- * link will do - and the button that commits is near-black, because the accent
- * belongs to the product, not to every control.
+ * The palette is Mnemo's own: cool paper neutrals, near-black ink, and the
+ * vermilion of the clover mark. Mnemo spends almost no colour on chrome -
+ * selection is a grey pill, a chosen card wears a dark ring, and the button
+ * that commits is near-black. Vermilion is therefore rationed to the places
+ * where something is genuinely live: a ticked box, a moving progress bar, the
+ * step you are on. Surfaces and spacing do the rest of the work.
  */
 
 :root {
   --canvas: #ffffff;
   --bar: #fafafa;
-  --sunken: #f6f6f8;
-  --chip: #f1f1f3;
-  --chip-hover: #e9e9ec;
+  --sunken: #f5f5f6;
+  --chip: #efeff1;
+  --chip-hover: #e6e6e9;
 
-  --line: #e2e2e6;
-  --line-soft: #f1f1f3;
-  --line-mid: #ececee;
+  --line: #e4e4e7;
+  --line-soft: #efeff1;
+  --line-mid: #eaeaed;
 
-  --ink: #1b1b1e;
-  --ink-strong: #17171a;
-  --ink-2: #4f4f57;
-  --ink-3: #75757e;
-  --ink-4: #9b9ba3;
+  --ink: #18181b;
+  --ink-strong: #101013;
+  --ink-2: #52525b;
+  --ink-3: #71717a;
+  --ink-4: #a1a1aa;
 
-  --accent: #6d4fd0;
-  --accent-ink: #5a3fb8;
-  --accent-wash: #e9e4fb;
-  --accent-bg: #faf8ff;
-  --accent-row: #f7f5fe;
-  --accent-line: #ebe7f9;
+  --accent: #e0562a;
+  --accent-ink: #a8451f;
+  /* Panels and chosen rows stay neutral - see the note above. */
+  --accent-bg: #fafafa;
+  --accent-row: #f2f2f4;
+  --accent-line: #e8e8eb;
 
-  --solid: #232327;
-  --solid-hover: #34343a;
-  --solid-fg: #fbfbfc;
+  --solid: #18181b;
+  --solid-hover: #2c2c31;
+  --solid-fg: #fafafa;
 
-  --ok-bg: #e8f4ed;
-  --ok-fg: #2f8f5b;
-  --bad-bg: #fbeae6;
-  --bad-fg: #cf3f26;
-  --alert: #e73939;
+  --ok-bg: #e8f1e9;
+  --ok-fg: #3d7a4e;
+  --bad-bg: #fbe9e5;
+  --bad-fg: #b5432a;
+  --alert: #e0562a;
+  --close: #c42b1c;
 
   --radius: 8px;
   --radius-lg: 11px;
   --pad-x: 90px;
 }
 
-/* The dark treatment is the same design with the neutrals inverted: identical
-   spacing, identical accent role, only the ground changes. */
+/* Mnemo's "Dusk": the same design on cool ink. Identical spacing, identical
+   accent role, only the ground changes. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --canvas: #1a1a1d;
-    --bar: #161618;
-    --sunken: #232327;
-    --chip: #2a2a2f;
-    --chip-hover: #33333a;
+    --canvas: #161618;
+    --bar: #121214;
+    --sunken: #202024;
+    --chip: #26262a;
+    --chip-hover: #303036;
 
-    --line: #34343a;
-    --line-soft: #26262a;
-    --line-mid: #2c2c31;
+    --line: #2e2e33;
+    --line-soft: #232327;
+    --line-mid: #29292e;
 
-    --ink: #ececef;
-    --ink-strong: #fbfbfc;
-    --ink-2: #c2c2c9;
-    --ink-3: #9b9ba3;
-    --ink-4: #77777f;
+    --ink: #ededf0;
+    --ink-strong: #fafafa;
+    --ink-2: #c0c0c7;
+    --ink-3: #94949c;
+    --ink-4: #6f6f78;
 
-    --accent: #8f74e8;
-    --accent-ink: #a992f0;
-    --accent-wash: #322a55;
-    --accent-bg: #201d2e;
-    --accent-row: #23203163;
-    --accent-line: #35304f;
+    --accent: #f0693a;
+    --accent-ink: #f5885f;
+    --accent-bg: #1b1b1e;
+    --accent-row: #232327;
+    --accent-line: #2e2e33;
 
-    --solid: #ececef;
+    --solid: #ededf0;
     --solid-hover: #ffffff;
-    --solid-fg: #1a1a1d;
+    --solid-fg: #161618;
 
-    --ok-bg: #1d3128;
-    --ok-fg: #5fc38c;
-    --bad-bg: #3a221d;
-    --bad-fg: #f08a70;
+    --ok-bg: #1d2c21;
+    --ok-fg: #7fb08d;
+    --bad-bg: #331f1a;
+    --bad-fg: #e08a6f;
+    --alert: #f0693a;
+    --close: #c42b1c;
   }
 }
 
@@ -96,7 +100,7 @@ body {
   overflow: hidden;               /* the shell owns layout; only lists scroll */
   background: var(--canvas);
   color: var(--ink);
-  font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif;
+  font: 15px/1.5 "Inter", "Segoe UI", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   user-select: none;              /* a desktop window, not a document */
 }
@@ -122,7 +126,7 @@ input, .selectable { user-select: text; }
   font-size: 12.5px;
 }
 .crumb-dim { color: var(--ink-4); }
-.crumb-sep { color: #c9c9cf; }
+.crumb-sep { color: var(--line); }
 .crumb { font-weight: 600; }
 
 .winbtns { display: flex; align-items: center; gap: 2px; padding-right: 12px; }
@@ -133,7 +137,7 @@ input, .selectable { user-select: text; }
   color: var(--ink-4);
 }
 .winbtn:hover { background: var(--chip); color: var(--ink); }
-.winbtn.close:hover { background: var(--alert); color: #fff; }
+.winbtn.close:hover { background: var(--close); color: #fff; }
 .winbtn i { display: block; }
 .g-min { width: 10px; height: 1.5px; background: currentColor; }
 .g-max { width: 9px; height: 9px; border: 1.5px solid currentColor; border-radius: 1.5px; }
@@ -166,9 +170,11 @@ input, .selectable { user-select: text; }
 }
 .step.now { color: var(--ink); font-weight: 600; }
 .step.now .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+/* Vermilion marks the step you are on. A finished step is just done, so it
+   goes quiet rather than staying lit. */
 .step.done { color: var(--ink-2); }
 .step.done .dot {
-  background: var(--accent-wash); border-color: transparent; color: var(--accent-ink);
+  background: var(--chip); border-color: transparent; color: var(--ink-2);
   font-size: 11px;
 }
 .rule { width: 26px; height: 1px; background: var(--line); }
@@ -239,10 +245,12 @@ strong { font-weight: 600; color: var(--ink); }
   border: 1.5px solid var(--line); border-radius: 12px;
   color: var(--ink);
 }
-.choice:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-bg); }
-.choice.selected { border-color: var(--accent); background: var(--accent-bg); }
+/* Chosen means a dark ring, the way Mnemo marks the theme you are on - not a
+   tinted panel. */
+.choice:hover { border-color: var(--ink-4); }
+.choice.selected { border-color: var(--ink); }
 .choice-arrow { font-size: 22px; line-height: 1; color: var(--ink-4); }
-.choice.selected .choice-arrow { color: var(--accent-ink); }
+.choice.selected .choice-arrow { color: var(--ink); }
 .choice-title { font-size: 16px; font-weight: 600; }
 .choice-note { font-size: 13.5px; line-height: 1.55; color: var(--ink-3); text-wrap: pretty; }
 
@@ -257,7 +265,6 @@ strong { font-weight: 600; color: var(--ink); }
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700;
 }
-.next .steps .num { background: var(--accent-wash); color: var(--accent-ink); }
 
 .field { display: flex; flex-direction: column; gap: 11px; }
 .key-input {
@@ -306,8 +313,9 @@ input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px;
 .items .empty { color: var(--ink-3); cursor: default; }
 .items .empty:hover { background: none; }
 
-/* One-of-many picking has no checkbox; the row itself is the control. */
-.pick-one li.on { box-shadow: inset 0 0 0 1.5px var(--accent); }
+/* One-of-many picking has no checkbox; the row itself is the control, so the
+   dark ring has to carry the whole signal. */
+.pick-one li.on { box-shadow: inset 0 0 0 1.5px var(--ink); }
 
 .foot-hint { flex: none; padding: 14px 10px 16px; }
 
