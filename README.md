@@ -11,6 +11,9 @@ the images as it goes.
 Everything runs locally. The only traffic is between your machine and Notion's API, and
 there is no account or telemetry.
 
+<img width="985" height="737" alt="image" src="https://github.com/user-attachments/assets/639c7c70-e8cc-445d-8969-e06ed3eb12c5" />
+
+
 ## The app
 
 ```
