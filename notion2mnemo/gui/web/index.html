@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notion ↔ Mnemo</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- The window is frameless, so the title bar is ours to draw. Only the
+       left strip carries pywebview-drag-region: the buttons must stay
+       clickable rather than becoming drag handles. -->
+  <header class="titlebar">
+    <div class="titlebar-drag pywebview-drag-region">
+      <span class="crumb-dim">Mnemo</span>
+      <span class="crumb-sep">/</span>
+      <span class="crumb">Convert</span>
+    </div>
+    <div class="winbtns">
+      <button class="winbtn" id="win-min" title="Minimise" aria-label="Minimise"><i class="g-min"></i></button>
+      <button class="winbtn" id="win-max" title="Maximise" aria-label="Maximise"><i class="g-max"></i></button>
+      <button class="winbtn close" id="win-close" title="Close" aria-label="Close"><i class="g-close"></i></button>
+    </div>
+  </header>
+
+  <!-- Three steps, one rail, shared by both directions. -->
+  <nav class="rail" id="rail" hidden>
+    <span class="step" id="step-1"><span class="dot">1</span><span class="step-name">Connect</span></span>
+    <span class="rule"></span>
+    <span class="step" id="step-2"><span class="dot">2</span><span class="step-name" id="step-2-name">Choose pages</span></span>
+    <span class="rule"></span>
+    <span class="step" id="step-3"><span class="dot">3</span><span class="step-name">Convert</span></span>
+  </nav>
+
+  <main class="stage">
+
+    <!-- ============ Start: which way are the notes going? ============ -->
+    <section class="screen" id="screen-start">
+      <div class="body center gap-lg pad-wide">
+        <div class="hero center-text">
+          <h1>Move your notes</h1>
+          <p class="lede narrow">Between Notion and Mnemo, with your formatting kept. Pick a direction to begin.</p>
+        </div>
+        <div class="choices">
+          <button class="choice selected" id="dir-pull" aria-pressed="true">
+            <span class="choice-arrow">→</span>
+            <span class="choice-title">Notion to Mnemo</span>
+            <span class="choice-note">Make a file from your Notion pages, then open it in Mnemo.</span>
+          </button>
+          <button class="choice" id="dir-push" aria-pressed="false">
+            <span class="choice-arrow">←</span>
+            <span class="choice-title">Mnemo to Notion</span>
+            <span class="choice-note">Send notes you exported from Mnemo up into your Notion pages.</span>
+          </button>
+        </div>
+      </div>
+      <footer class="actionbar">
+        <span class="version" id="version"></span>
+        <span class="spacer"></span>
+        <button class="btn solid" data-go="connect">Continue</button>
+      </footer>
+    </section>
+
+    <!-- ============ Step 1: connect ============ -->
+    <section class="screen" id="screen-connect" hidden>
+      <div class="body middle gap-md pad-wide">
+        <div class="hero">
+          <h2>Let the app read your Notion</h2>
+          <p class="lede">Notion hands out a password-like key so apps can see the pages you choose.
+            Get yours, paste it here. Has to be done once and takes&nbsp;~2 minutes.</p>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <span class="num">1</span>
+            <span>Open <a href="#" data-url="https://www.notion.so/my-integrations">notion.so/my-integrations</a>,
+              press <strong>New integration</strong>, then copy the secret it shows you.</span>
+          </li>
+          <li>
+            <span class="num">2</span>
+            <span>In Notion, open a page you want to move and choose <strong>⋯ → Connections</strong> →
+              your new integration. Pages inside it come too.</span>
+          </li>
+        </ol>
+
+        <div class="field">
+          <input type="password" id="token" class="key-input" placeholder="Paste the secret here"
+                 autocomplete="off" spellcheck="false">
+          <label class="check"><input type="checkbox" id="remember-token"> Stay signed in on this computer</label>
+        </div>
+      </div>
+      <footer class="actionbar">
+        <span class="foot-note">The key stays on this computer and is only ever sent to Notion.</span>
+        <span class="spacer"></span>
+        <button class="btn quiet" data-go="start">Back</button>
+        <button class="btn solid" id="connect-continue">Continue</button>
+      </footer>
+    </section>
+
+    <!-- ============ Step 2 (Notion → Mnemo): choose pages ============ -->
+    <section class="screen" id="screen-pages" hidden>
+      <div class="body pad-wide">
+        <div class="list-head">
+          <h2>What should come across?</h2>
+          <p class="lede">Pages inside these come along automatically, so you don't need to tick them separately.</p>
+          <div class="list-bar">
+            <label class="check strong"><input type="checkbox" id="select-all" checked> Everything</label>
+            <span class="spacer"></span>
+            <input type="search" id="filter" class="filter" placeholder="Filter">
+            <span class="muted" id="selection-count"></span>
+          </div>
+        </div>
+        <ul class="items" id="page-list"></ul>
+        <p class="muted foot-hint">Can't see a page? In Notion it needs <strong>⋯ → Connections</strong> too.
+          <a href="#" id="reload-pages">Check again</a></p>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" data-go="connect">Back</button>
+        <button class="btn solid" id="pages-continue">Continue</button>
+      </footer>
+    </section>
+
+    <!-- ============ Step 3 (Notion → Mnemo): ready ============ -->
+    <section class="screen" id="screen-ready" hidden>
+      <div class="body middle gap-md pad-wide">
+        <div class="hero">
+          <h2>Ready when you are</h2>
+          <p class="lede" id="ready-summary"></p>
+        </div>
+
+        <div class="panel">
+          <div class="prow">
+            <div class="prow-text">
+              <span class="prow-label">Save the file as</span>
+              <span class="prow-value"><strong id="output-name">notion-export.mnemo</strong>
+                <span class="muted" id="output-dir"></span></span>
+            </div>
+            <button class="btn chip" id="pick-output">Change…</button>
+          </div>
+          <div class="prow">
+            <div class="prow-text">
+              <span class="prow-label">Put them in a Mnemo folder called</span>
+              <input type="text" id="opt-folder" class="inline-input" value="Notion"
+                     placeholder="top level" aria-label="Mnemo folder name">
+            </div>
+            <button class="btn chip" id="rename-folder">Rename…</button>
+          </div>
+          <label class="prow toggle">
+            <input type="checkbox" id="opt-covers">
+            <span class="prow-flex">Bring page cover pictures along</span>
+            <span class="muted">makes the file bigger</span>
+          </label>
+          <label class="prow toggle">
+            <input type="checkbox" id="opt-dbprops" checked>
+            <span class="prow-flex">Show database details as a table</span>
+            <span class="muted">atop each note</span>
+          </label>
+        </div>
+
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <label class="adv-row">Stop after
+            <input type="number" id="opt-limit" min="1" placeholder="no limit"> pages
+          </label>
+        </details>
+
+        <p class="muted">Notion only lets apps read a few pages a second, so this usually takes a
+          couple of minutes. You can leave it running.</p>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" data-go="pages">Back</button>
+        <button class="btn solid" id="run-pull">Convert</button>
+      </footer>
+    </section>
+
+    <!-- ============ Step 2 (Mnemo → Notion): package + destination ============ -->
+    <section class="screen" id="screen-source" hidden>
+      <div class="body pad-wide">
+        <div class="list-head">
+          <h2>Which notes, and where to?</h2>
+          <p class="lede">Export a package from Mnemo first, with
+            <strong>Notes → Export → Mnemo package</strong>.</p>
+          <div class="panel tight">
+            <div class="prow">
+              <div class="prow-text">
+                <span class="prow-label">The package to send</span>
+                <span class="prow-value" id="package-value">Nothing chosen yet</span>
+              </div>
+              <button class="btn chip" id="pick-package">Choose file…</button>
+            </div>
+          </div>
+          <div class="list-bar">
+            <span class="strong">Create the notes inside this page</span>
+            <span class="spacer"></span>
+            <input type="search" id="parent-filter" class="filter" placeholder="Filter">
+            <a href="#" id="reload-parents" class="muted">Check again</a>
+          </div>
+        </div>
+        <ul class="items pick-one" id="parent-list"></ul>
+        <p class="muted foot-hint">The page you pick must be connected to the integration
+          (<strong>⋯ → Connections</strong>), and the integration needs permission to insert content.</p>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" data-go="connect">Back</button>
+        <button class="btn solid" id="source-continue">Continue</button>
+      </footer>
+    </section>
+
+    <!-- ============ Step 3 (Mnemo → Notion): ready ============ -->
+    <section class="screen" id="screen-push-ready" hidden>
+      <div class="body middle gap-md pad-wide">
+        <div class="hero">
+          <h2>Ready when you are</h2>
+          <p class="lede" id="push-summary"></p>
+        </div>
+        <div class="panel">
+          <div class="prow">
+            <div class="prow-text">
+              <span class="prow-label">Sending</span>
+              <span class="prow-value" id="push-package-value"></span>
+            </div>
+          </div>
+          <div class="prow">
+            <div class="prow-text">
+              <span class="prow-label">Into the Notion page</span>
+              <span class="prow-value" id="push-parent-value"></span>
+            </div>
+          </div>
+          <label class="prow toggle">
+            <input type="checkbox" id="opt-upload-images" checked>
+            <span class="prow-flex">Upload the pictures into Notion</span>
+            <span class="muted">otherwise they're skipped</span>
+          </label>
+        </div>
+        <p class="muted">New pages are created; nothing already in Notion is changed or replaced.</p>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" data-go="source">Back</button>
+        <button class="btn solid" id="run-push">Create the pages</button>
+      </footer>
+    </section>
+
+    <!-- ============ Working ============ -->
+    <section class="screen" id="screen-working" hidden>
+      <div class="body center gap-lg pad-wider center-text">
+        <div class="spinner"></div>
+        <div class="hero center-text">
+          <h2 id="working-title">Copying your notes…</h2>
+          <p class="lede" id="working-sub">Getting started…</p>
+        </div>
+        <div class="progress-wrap">
+          <div class="track"><div class="fill" id="progress-fill"></div></div>
+          <div class="now" id="working-now"></div>
+        </div>
+        <p class="muted narrow">You can leave this running and come back.</p>
+      </div>
+      <footer class="actionbar">
+        <span class="foot-note" id="started-at"></span>
+        <span class="spacer"></span>
+        <button class="btn quiet" id="stop-run">Stop</button>
+      </footer>
+    </section>
+
+    <!-- ============ Finished ============ -->
+    <section class="screen" id="screen-done" hidden>
+      <div class="body middle gap-md pad-wide">
+        <div class="result">
+          <div class="result-mark ok">✓</div>
+          <div class="hero">
+            <h2 id="done-title"></h2>
+            <p class="lede" id="done-sub"></p>
+          </div>
+        </div>
+
+        <div class="next" id="done-next">
+          <div class="next-title" id="next-title">Now bring it into Mnemo</div>
+          <ol class="steps tight" id="next-steps"></ol>
+        </div>
+
+        <div class="notice" id="warn-notice" hidden>
+          <span class="notice-dot"></span>
+          <span class="notice-text" id="warn-text"></span>
+          <button class="linkish" id="warn-toggle">See the list</button>
+        </div>
+        <pre class="warn-list" id="warn-list" hidden></pre>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" id="again">Convert something else</button>
+        <button class="btn chip" id="open-folder" hidden>Show the file</button>
+        <button class="btn solid" id="done-close">Done</button>
+      </footer>
+    </section>
+
+    <!-- ============ When it goes wrong ============ -->
+    <section class="screen" id="screen-error" hidden>
+      <div class="body middle gap-md pad-wide">
+        <div class="result">
+          <div class="result-mark bad">!</div>
+          <div class="hero">
+            <h2 id="error-title"></h2>
+            <p class="lede">Nothing was changed on either side.</p>
+          </div>
+        </div>
+        <div class="panel plain" id="error-checks-wrap">
+          <div class="checks-title" id="checks-title">Two things to check</div>
+          <div id="error-checks"></div>
+        </div>
+        <p class="muted">Still stuck? <a href="#" data-url="https://www.notion.so/my-integrations">Open your integrations page</a>
+          or <a href="#" id="copy-detail">copy the technical details</a> for a report.</p>
+      </div>
+      <footer class="actionbar">
+        <span class="spacer"></span>
+        <button class="btn quiet" id="error-back">Back</button>
+        <button class="btn solid" id="error-retry">Try again</button>
+      </footer>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

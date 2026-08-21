@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.notion-cache/
+*.mnemo
+*.warnings.txt
+build/
+dist/
+.ui-test/
+mnemo-repo/
+Mnemo-Setup.exe
